@@ -1,0 +1,15 @@
+Debug/Roteamento.log
+Debug/Roteamento.pch
+Debug/Roteamento.tlog/CL.read.1.tlog
+Debug/Roteamento.tlog/CL.write.1.tlog
+Debug/Roteamento.tlog/link.read.1.tlog
+Debug/Roteamento.tlog/Roteamento.lastbuildstate
+*.obj
+Debug/vc120.idb
+*.pdb
+*.vcxproj
+Roteamento.vcxproj.filters
+stdafx.cpp
+*.h
+*.tlog
+ReadMe.txt
