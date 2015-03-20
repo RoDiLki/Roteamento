@@ -3,7 +3,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <conio.h>
 #include <time.h>
 #include <algorithm>
 #include <iostream>
@@ -13,7 +12,7 @@ using namespace std;
 #define INFINITY 32768
 #define MEMBER 1
 #define NONMEMBER 0
-#define MAXNODES 4
+#define MAXNODES 50
 
 typedef struct{
 	int orig;
@@ -24,17 +23,11 @@ typedef struct{
 typedef struct graph GRAPH;
 
 struct arc {
-
-	// se adj=1 então ADJACENTE; se adj=0 então NÃO ADJACENTE
 	int adj;
-
-	// peso da aresta
 	int weight;
 };
 
 struct graph {
-
-	// matriz de adjacências
 	struct arc arcs[MAXNODES][MAXNODES];
 };
 
@@ -42,24 +35,30 @@ vector<vector <int>> topologia;
 vector<Trafego> vecTrafego;
 vector<vector<int>> matAdjacencia;
 vector <vector<int>> vecCaminhos;
+int nNos = 0;
 
-int leituraTopologia();
-void imprimeTopologia(int nNos);
+void leituraTopologia();
+void imprimeTopologia();
 void imprimeTrafego();
-void inicializaAdjacencia(int nNos);
-
-void imprimeAdjacencia(GRAPH *gTemp);
-GRAPH* init_graph();
-void joinwt(GRAPH *g, int origem, int destino, int wt);
-void dijkstra(GRAPH *g, int s, int t);
-void calculaTrafego(GRAPH *g);
-void imprimeTopologiaTrafego(int nNos, GRAPH *g);
+void imprimeAdjacencia(GRAPH *ADJ);
+void joinwt(GRAPH *ADJ, int origem, int destino, int wt);
+void dijkstra(GRAPH *ADJ, int s, int t);
+void calculaTrafego(GRAPH *ADJ);
+void imprimeTopologiaTrafego(GRAPH *ADJ);
 void imprimeCaminhos();
+GRAPH* init_graph();
 
 int main()
 {
-	int nNos = leituraTopologia();
-	imprimeTopologia(nNos);
+	cout << " \t|-------------------------------------------------|\n" ;
+	cout << " \t| Simulador para calculo de Capacidade Por Enlace |\n";
+	cout << " \t|                Alunos: Rodrigo Levinski         |\n";
+	cout << " \t|                                E                |\n";
+	cout << " \t|                           Guilherme Bizzani     |\n";
+	cout << " \t|-------------------------------------------------|\n";
+	
+	leituraTopologia();
+	imprimeTopologia();
 	imprimeTrafego();
 
 	GRAPH *ADJ = init_graph();
@@ -69,26 +68,28 @@ int main()
 		joinwt(ADJ, topologia[i][0] - 1, topologia[i][1] - 1, 1);
 
 	}
-
 	//imprimeAdjacencia(ADJ);
 
 	for (int i = 0; i < vecTrafego.size(); i++)
 	{
 		dijkstra(ADJ, vecTrafego[i].orig-1, vecTrafego[i].dest-1);
 	}
-
 	cout << endl;
 
 	calculaTrafego(ADJ);
 
 	//imprimeCaminhos();
-
-	imprimeTopologiaTrafego(nNos, ADJ);
-
+	imprimeTopologiaTrafego(ADJ);
 	//imprimeAdjacencia(ADJ);
-
 	cout << "\n\n";
 	system("pause");
+
+	vecCaminhos.clear();
+	matAdjacencia.clear();
+	vecTrafego.clear();
+	topologia.clear();
+	free(ADJ);
+
 	return 0;
 }
 
@@ -109,9 +110,9 @@ void imprimeCaminhos(){
 
 void imprimeAdjacencia(GRAPH *gTemp){
 	cout << endl;
-	for (int i = 0; i < MAXNODES; i++) {
+	for (int i = 0; i < nNos; i++) {
 
-		for (int j = 0; j < MAXNODES; j++) {
+		for (int j = 0; j < nNos; j++) {
 
 			if (gTemp->arcs[i][j].weight < 32000) cout << " - " << gTemp->arcs[i][j].adj << " T " << gTemp->arcs[i][j].weight;
 			else cout << " - " << gTemp->arcs[i][j].adj << " NC ";
@@ -121,9 +122,6 @@ void imprimeAdjacencia(GRAPH *gTemp){
 	}
 }
 
-
-// inicializa matriz de adjacência que representa o grafo
-// retorna ponteiro para esta matriz (tipo GRAPH)
 GRAPH* init_graph() {
 
 	GRAPH *gTemp = (GRAPH *)malloc(sizeof(GRAPH));
@@ -141,8 +139,6 @@ GRAPH* init_graph() {
 
 }
 
-// cria uma aresta que "liga" (incide) em dois nós e atribui o respectivo peso;
-// recebe o grafo, dois nós (origem e destino) e o peso (wt) da aresta
 void joinwt(GRAPH *ADJ, int origem, int destino, int wt) {
 
 	ADJ->arcs[origem][destino].adj = 1;
@@ -213,7 +209,6 @@ void dijkstra(GRAPH *g, int ORIG, int DEST)
 					dist[i] = newdist;
 					path[i] = current;
 				}
-
 				//determina o vértice (entre todos os não pertencentes a perm) com menor distância
 				if (dist[i] < smalldist) {
 					smalldist = dist[i];
@@ -224,8 +219,6 @@ void dijkstra(GRAPH *g, int ORIG, int DEST)
 
 		} 
 
-		//embora estamos assumindo grafos ponderados e conexos, este if garante que
-		//em caso de não existência de um caminho o programa não entre em loop infinito 
 		if (current == k) {
 			printf("\n\nCAMINHO NAO EXISTE\n\n");
 			return;
@@ -235,20 +228,14 @@ void dijkstra(GRAPH *g, int ORIG, int DEST)
 		perm[current] = MEMBER;
 	} 
 
-	//printf("\n\nRESULTADO: ");
 	int caminho = DEST;
-
-	//printf("%d <- ", DEST+1);
 	caminhoMIN.push_back(DEST + 1);
 
 	while (caminho != ORIG)
 	{
-		//printf("%d", path[caminho]+1);
 		caminhoMIN.push_back(path[caminho] + 1);
 		caminho = path[caminho];
 
-		//if (caminho != ORIG)
-		//	printf(" <- ");
 	}
 	vector<int> axx;
 	for (int i = caminhoMIN.size()-1;  i >= 0; i--){
@@ -256,67 +243,77 @@ void dijkstra(GRAPH *g, int ORIG, int DEST)
 	}
 
 	vecCaminhos.push_back(axx);
-	//printf("\n\ncusto: %d\n\n", dist[DEST]);
-	/****************************************/
-
 } 
 
-int leituraTopologia(){
+void leituraTopologia(){
 
-	ifstream infile("teste.txt");
+	string tp, tf;
+
+	cout << "\n\tDigite o nome do arquivo que contenha a topologia (sem txt): ";
+	cin >> tp;
+	tp += ".txt";
+	cout << "\n\n\tDigite o nome do arquivo que contenha os  trafegos (sem txt) : ";
+	cin >> tf;
+	tf += ".txt";
+	cout << "\n\n";
+	ifstream infile(tp);
 
 	string line;
-	int trafego = 0;
-	int ja = 0;
-	int nNos;
+
 	while (getline(infile, line)){
 		istringstream iss(line);
 		int n;
 		vector<int> v;
 
 		while (iss >> n){
-			if (ja == 0){
-				nNos = n;
-				ja = 1;
-			}
+			if (n > nNos )nNos = n;
 			v.push_back(n);
 		}
-		if (v[0] == -1){
-			trafego = 1;
-		}
-		if (trafego == 0 && ja!= 1){
-			topologia.push_back(v);
-		}
-		else if (trafego == 1 && v[0] > -1){
-			Trafego ax;
-			ax.orig = v[0];
-			ax.dest = v[1];
-			ax.trafego = v[2];
-			vecTrafego.push_back(ax);
-		}
-		else{
-			ja = 2;
-		}
-		
+
+		topologia.push_back(v);
 	}
 	infile.close();
-	return nNos;
+
+	ifstream infile2(tf);
+
+	while (getline(infile2, line)){
+		istringstream iss(line);
+		int n;
+		vector<int> v;
+
+		while (iss >> n){
+			v.push_back(n);
+		}
+		Trafego ax;
+		ax.orig = v[0];
+		ax.dest = v[1];
+		ax.trafego = v[2];
+		vecTrafego.push_back(ax);
+	}
+	infile2.close();
 }
 
-void imprimeTopologiaTrafego(int nNos, GRAPH *g){
+void imprimeTopologiaTrafego(GRAPH *ADJ){
+	
+	
+	ofstream arquivo("saida.txt");
 
-	cout << "Rede com " << nNos << " nos\n" << endl << "O - D = Trafego\n\n";
+	arquivo << "O  -  D  ->  C\n\n";
+
+	cout << "Rede com " << nNos << " nos\n" << endl << "O - D =  C\n\n";
 	for (int i = 0; i < topologia.size(); i++){
-
-		cout << topologia[i][0] << " - " << topologia[i][1] << " =   "<< g->arcs[topologia[i][0]-1][topologia[i][1]-1].weight;
+		
+		cout << topologia[i][0] << " - " << topologia[i][1] << " =  "<< ADJ->arcs[topologia[i][0]-1][topologia[i][1]-1].weight;
+		arquivo << topologia[i][0]<<"  -  " << topologia[i][1]<< "  ->  "<< ADJ->arcs[topologia[i][0] - 1][topologia[i][1] - 1].weight << endl;
 		cout << endl;
 
 	}
+	arquivo.close();
 }
 
-void imprimeTopologia(int nNos){
+void imprimeTopologia(){
 
-	cout <<"Rede com "<<nNos<<" nos" << endl << "O - D \n";
+	cout <<"Rede com "<< nNos <<" nos" << endl << "O - D \n";
 	for (int i = 0; i < topologia.size(); i++){
 
 		cout << topologia[i][0] << " = " << topologia[i][1];
@@ -326,7 +323,7 @@ void imprimeTopologia(int nNos){
 }
 
 void imprimeTrafego(){
-	cout << endl << "O --- D --> Trafego\n\n";
+	cout << endl << "O --- D --> C\n\n";
 	for (int i = 0; i < vecTrafego.size(); i++){
 		
 		cout << vecTrafego[i].orig <<" --- "<< vecTrafego[i].dest <<" --> "<< vecTrafego[i].trafego<<endl;
