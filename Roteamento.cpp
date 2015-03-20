@@ -1,6 +1,3 @@
-// 
-//
-
 #include "stdafx.h"
 #include <fstream>
 #include <sstream>
@@ -44,7 +41,7 @@ struct graph {
 vector<vector <int>> topologia;
 vector<Trafego> vecTrafego;
 vector<vector<int>> matAdjacencia;
-vector < vector<int>> vecCaminhos;
+vector <vector<int>> vecCaminhos;
 
 int leituraTopologia();
 void imprimeTopologia(int nNos);
@@ -57,8 +54,7 @@ void joinwt(GRAPH *g, int origem, int destino, int wt);
 void dijkstra(GRAPH *g, int s, int t);
 void calculaTrafego(GRAPH *g);
 void imprimeTopologiaTrafego(int nNos, GRAPH *g);
-
-//void dijkstra(int nNos, int origem, int destino, GRAPH *g);
+void imprimeCaminhos();
 
 int main()
 {
@@ -74,32 +70,51 @@ int main()
 
 	}
 
+	//imprimeAdjacencia(ADJ);
 
-	imprimeAdjacencia(ADJ);
-
-	
 	for (int i = 0; i < vecTrafego.size(); i++)
 	{
 		dijkstra(ADJ, vecTrafego[i].orig-1, vecTrafego[i].dest-1);
-		//dijkstra(nNos, vecTrafego[i].orig, vecTrafego[i].dest, ADJ);
 	}
+
+	cout << endl;
+
 	calculaTrafego(ADJ);
+
+	//imprimeCaminhos();
+
 	imprimeTopologiaTrafego(nNos, ADJ);
 
-	imprimeAdjacencia(ADJ);
+	//imprimeAdjacencia(ADJ);
 
 	cout << "\n\n";
 	system("pause");
 	return 0;
 }
+
+void imprimeCaminhos(){
+	for (int i = 0; i < vecCaminhos.size(); i++)
+	{
+		cout << "Caminho " << i + 1 << " - > ";
+		for (int j = 0; j < vecCaminhos[i].size(); j++)
+		{
+			if (j != vecCaminhos[i].size()-1)
+			cout << vecCaminhos[i][j] << " - ";
+			else
+			cout << vecCaminhos[i][j];
+		}
+		cout << endl << endl;
+	}
+}
+
 void imprimeAdjacencia(GRAPH *gTemp){
 	cout << endl;
 	for (int i = 0; i < MAXNODES; i++) {
 
 		for (int j = 0; j < MAXNODES; j++) {
 
-			//cout << " - " << gTemp->arcs[i][j].adj
-				cout << " peso " << gTemp->arcs[i][j].weight;
+			if (gTemp->arcs[i][j].weight < 32000) cout << " - " << gTemp->arcs[i][j].adj << " T " << gTemp->arcs[i][j].weight;
+			else cout << " - " << gTemp->arcs[i][j].adj << " NC ";
 			
 		}
 		cout << endl << endl;
@@ -139,11 +154,22 @@ void joinwt(GRAPH *ADJ, int origem, int destino, int wt) {
 void calculaTrafego(GRAPH *g){
 
 	for (int i = 0; i < vecCaminhos.size(); i++){
-		for (int j = 0; j < vecCaminhos[i].size() - 1; j++){
-			g->arcs[vecCaminhos[i][j]][vecCaminhos[i][j + 1]].weight += vecTrafego[i].trafego;
-			g->arcs[vecCaminhos[i][j + 1]][vecCaminhos[i][j]].weight += vecTrafego[i].trafego;
+		for (int j = 0; j < vecCaminhos[i].size()-1; j++){
+
+			g->arcs[vecCaminhos[i][j] - 1][vecCaminhos[i][j + 1] - 1].weight += vecTrafego[i].trafego;
+			g->arcs[vecCaminhos[i][j + 1] - 1][vecCaminhos[i][j] - 1].weight += vecTrafego[i].trafego;
+
 		}
 	}
+
+	for (int i = 0; i < MAXNODES; i++)
+	{
+		for (int j = 0; j < MAXNODES; j++)
+		{
+			g->arcs[i][j].weight -= 1;
+		}
+	}
+
 }
 
 void dijkstra(GRAPH *g, int ORIG, int DEST)
@@ -209,33 +235,28 @@ void dijkstra(GRAPH *g, int ORIG, int DEST)
 		perm[current] = MEMBER;
 	} 
 
-
-
-	printf("\n\nRESULTADO: ");
+	//printf("\n\nRESULTADO: ");
 	int caminho = DEST;
 
-	printf("%d <- ", DEST+1);
+	//printf("%d <- ", DEST+1);
 	caminhoMIN.push_back(DEST + 1);
 
 	while (caminho != ORIG)
 	{
-		printf("%d", path[caminho]+1);
+		//printf("%d", path[caminho]+1);
 		caminhoMIN.push_back(path[caminho] + 1);
 		caminho = path[caminho];
 
-		if (caminho != ORIG)
-			printf(" <- ");
+		//if (caminho != ORIG)
+		//	printf(" <- ");
 	}
 	vector<int> axx;
-
-	for (int i = caminhoMIN.size()-1; i >= 0; i--)
-	{
-		axx.push_back(caminhoMIN[caminhoMIN.size()-1]);
-		caminhoMIN.pop_back();
+	for (int i = caminhoMIN.size()-1;  i >= 0; i--){
+		axx.push_back(caminhoMIN[i]);
 	}
 
 	vecCaminhos.push_back(axx);
-	printf("\n\ncusto: %d\n\n", dist[DEST]);
+	//printf("\n\ncusto: %d\n\n", dist[DEST]);
 	/****************************************/
 
 } 
@@ -284,10 +305,10 @@ int leituraTopologia(){
 
 void imprimeTopologiaTrafego(int nNos, GRAPH *g){
 
-	cout << "Rede com " << nNos << " nos" << endl << "O - D = Trafego\n";
+	cout << "Rede com " << nNos << " nos\n" << endl << "O - D = Trafego\n\n";
 	for (int i = 0; i < topologia.size(); i++){
 
-		cout << topologia[i][0] << " - " << topologia[i][1] << " = "<< g->arcs[topologia[i][0]-1][topologia[i][1]-1].weight;
+		cout << topologia[i][0] << " - " << topologia[i][1] << " =   "<< g->arcs[topologia[i][0]-1][topologia[i][1]-1].weight;
 		cout << endl;
 
 	}
